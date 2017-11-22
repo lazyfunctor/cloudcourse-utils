@@ -1,0 +1,9 @@
+terraform.tfstate
+terraform.tfplan
+*.backup
+./*.tfstate
+.terraform/
+*.log
+*.bak
+*~
+.*.swp
