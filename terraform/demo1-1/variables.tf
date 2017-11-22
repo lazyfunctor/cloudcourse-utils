@@ -13,6 +13,11 @@ variable "aws_az_b" {
     default = "us-east-1b"
 }
 
+variable "aws_az_c" {
+    description = "AWS availability zone C"
+    default = "us-east-1c"
+}
+
 
 variable "aws_amis" {
   default = {
