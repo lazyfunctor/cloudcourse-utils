@@ -278,3 +278,48 @@ resource "aws_instance" "client" {
         Name = "ClientBenchmark"
     }
 }
+
+## Hack for the idiosyncracies of dashboard source!!! 
+
+locals {
+    aws_lb_tg = "${aws_alb_target_group.demo.id}"
+    aws_lb_tg_val = "${element(split(":", local.aws_lb_tg), 5)}"
+    aws_lb_arn = "${aws_alb.demo.id}"
+    aws_lb_id = "${element(split(":", local.aws_lb_arn), 5)}"
+    aws_lb_val = "${replace(local.aws_lb_id, "loadbalancer/", "")}"
+}
+
+resource "aws_cloudwatch_dashboard" "main" {
+   dashboard_name = "my-dashboard"
+   dashboard_body = <<EOF
+   {
+        "widgets": [
+            {
+                "type": "metric",
+                "x": 0,
+                "y": 0,
+                "width": 6,
+                "height": 6,
+                "properties": {
+                    "view": "timeSeries",
+                    "stacked": false,
+                    "metrics": [
+                        [ "AWS/EC2", "CPUUtilization", "AutoScalingGroupName", "${aws_autoscaling_group.demo-asg.name}", { "period": 60 } ],
+                        [ "AWS/ApplicationELB", "HealthyHostCount", "TargetGroup", "${local.aws_lb_tg_val}", "LoadBalancer", "${local.aws_lb_val}", { "period": 60 } ]
+                    ],
+                    "region": "${var.aws_region}",
+                    "period": 60
+                }
+            }
+        ]
+    }
+    EOF
+}
+
+output "lb_tg_part" {
+  value = "${local.aws_lb_tg_val}"
+}
+
+output "lb_lb_part" {
+  value = "${local.aws_lb_val}"
+}
