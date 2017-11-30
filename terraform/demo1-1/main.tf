@@ -126,6 +126,7 @@ resource "aws_alb_target_group" "demo" {
     port     = 4500
     protocol = "HTTP"
     vpc_id   = "${aws_vpc.svc.id}"
+    deregistration_delay = 60
     health_check {
         healthy_threshold   = 5
         unhealthy_threshold = 2
@@ -289,31 +290,21 @@ locals {
     aws_lb_val = "${replace(local.aws_lb_id, "loadbalancer/", "")}"
 }
 
+data "template_file" "dashboard" {
+  template = "${file("dashboard_source.tpl")}"
+
+  vars {
+    asg_name = "${aws_autoscaling_group.demo-asg.name}"
+    alb_tg   = "${local.aws_lb_tg_val}"
+    alb      = "${local.aws_lb_val}"
+    region   = "${var.aws_region}"
+  }
+}
+
 resource "aws_cloudwatch_dashboard" "main" {
    dashboard_name = "my-dashboard"
-   dashboard_body = <<EOF
-   {
-        "widgets": [
-            {
-                "type": "metric",
-                "x": 0,
-                "y": 0,
-                "width": 6,
-                "height": 6,
-                "properties": {
-                    "view": "timeSeries",
-                    "stacked": false,
-                    "metrics": [
-                        [ "AWS/EC2", "CPUUtilization", "AutoScalingGroupName", "${aws_autoscaling_group.demo-asg.name}", { "period": 60 } ],
-                        [ "AWS/ApplicationELB", "HealthyHostCount", "TargetGroup", "${local.aws_lb_tg_val}", "LoadBalancer", "${local.aws_lb_val}", { "period": 60 } ]
-                    ],
-                    "region": "${var.aws_region}",
-                    "period": 60
-                }
-            }
-        ]
-    }
-    EOF
+   # dashboard_body = ""
+   dashboard_body = "${data.template_file.dashboard.rendered}"
 }
 
 output "lb_tg_part" {
@@ -322,4 +313,12 @@ output "lb_tg_part" {
 
 output "lb_lb_part" {
   value = "${local.aws_lb_val}"
+}
+
+output "alb_address" {
+  value = "${aws_alb.demo.dns_name}"
+}
+
+output "client_ip" {
+  value = ["${aws_instance.client.public_ip}"]
 }
