@@ -49,3 +49,8 @@ variable "asg_desired" {
   description = "Desired numbers of servers in ASG"
   default     = "4"
 }
+
+variable "create_dashboard" {
+  description = "Whethere to create the dashboard or not"
+  default     = "0"
+}

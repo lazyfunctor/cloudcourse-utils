@@ -302,9 +302,10 @@ data "template_file" "dashboard" {
 }
 
 resource "aws_cloudwatch_dashboard" "main" {
-   dashboard_name = "my-dashboard"
-   # dashboard_body = ""
-   dashboard_body = "${data.template_file.dashboard.rendered}"
+    count = "${var.create_dashboard}"
+    dashboard_name = "my-dashboard"
+    # dashboard_body = ""
+    dashboard_body = "${data.template_file.dashboard.rendered}"
 }
 
 output "lb_tg_part" {
