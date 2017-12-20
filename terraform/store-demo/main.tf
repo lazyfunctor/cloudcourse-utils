@@ -98,3 +98,6 @@ resource "aws_instance" "client" {
     }
 }
 
+output "client_ip" {
+  value = ["${aws_instance.client.public_ip}"]
+}
